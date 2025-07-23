@@ -17,6 +17,7 @@ from src.routes.categories import categories_bp
 from src.routes.products import products_bp
 from src.routes.orders import orders_bp
 from src.routes.admin import admin_bp
+from src.routes.pages import pages_bp
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
@@ -29,9 +30,8 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(categories_bp, url_prefix='/api')
 app.register_blueprint(products_bp, url_prefix='/api')
 app.register_blueprint(orders_bp, url_prefix='/api')
-app.register_blueprint(admin_bp, url_prefix='/api/admin')
-
-# Database configuration
+app.register_blueprint(admin_bp, url_prefix="/api/admin")
+app.register_blueprint(pages_bp, url_prefix="/api")# Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
