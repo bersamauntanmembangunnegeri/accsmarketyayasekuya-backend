@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -43,99 +44,75 @@ def seed_data():
     with app.app_context():
         # Check if categories already exist
         if Category.query.count() == 0:
-            print("Seeding initial data...")
+            print("Seeding initial data from JSON files...")
             
+            data_dir = os.path.join(os.path.dirname(__file__), 'data')
+
             # Create categories
-            fb_category = Category(name="Facebook Accounts", slug="facebook-accounts", description="High-quality Facebook accounts for various purposes")
-            ig_category = Category(name="Instagram Accounts", slug="instagram-accounts", description="Premium Instagram accounts with various features")
+            with open(os.path.join(data_dir, 'categories.json'), 'r') as f:
+                categories_data = json.load(f)
             
-            db.session.add_all([fb_category, ig_category])
+            category_map = {}
+            for cat_data in categories_data:
+                category = Category(name=cat_data['name'], slug=cat_data['slug'], description=cat_data['description'])
+                db.session.add(category)
+                db.session.flush() # To get the ID for parent_id
+                category_map[cat_data['slug']] = category
             db.session.commit()
 
             # Create sub-categories
-            fb_softregs = Category(name="Facebook Softregs", slug="facebook-softregs", description="Facebook accounts registered with software", parent_id=fb_category.id)
-            fb_friends = Category(name="Facebook With friends", slug="facebook-with-friends", description="Facebook accounts with existing friends", parent_id=fb_category.id)
-            ig_softreg = Category(name="Instagram Softreg", slug="instagram-softreg", description="Instagram accounts registered with software", parent_id=ig_category.id)
-            ig_aged = Category(name="Instagram Aged", slug="instagram-aged", description="Aged Instagram accounts", parent_id=ig_category.id)
-
-            db.session.add_all([fb_softregs, fb_friends, ig_softreg, ig_aged])
+            with open(os.path.join(data_dir, 'subcategories.json'), 'r') as f:
+                subcategories_data = json.load(f)
+            
+            for sub_cat_data in subcategories_data:
+                parent_category = category_map.get(sub_cat_data['parent_slug'])
+                if parent_category:
+                    subcategory = Category(
+                        name=sub_cat_data['name'],
+                        slug=sub_cat_data['slug'],
+                        description=sub_cat_data['description'],
+                        parent_id=parent_category.id
+                    )
+                    db.session.add(subcategory)
+                    category_map[sub_cat_data['slug']] = subcategory # Add subcategory to map as well
             db.session.commit()
 
             # Create products
-            product1 = Product(
-                category_id=fb_softregs.id,
-                name="FB Accounts | Verified by e-mail, there is no email in the set. Male or female. The account profiles may be empty or have limited entries such as photos and other information. 2FA included. Cookies are included. Accounts are registered in United Kingdom IP.",
-                description="High quality Facebook accounts verified by email",
-                base_price=0.278,
-                stock_quantity=345,
-                rating=4.6,
-                return_rate=2.1,
-                delivery_time="48h",
-                is_active=True
-            )
-            product2 = Product(
-                category_id=fb_softregs.id,
-                name="FB Accounts | Verified by email (email not included). Male or female. The account profiles may be empty or have limited entries such as photos and other information. 2FA included. Registered from USA IP.",
-                description="Facebook soft registered accounts from USA",
-                base_price=0.296,
-                stock_quantity=1648,
-                rating=4.8,
-                return_rate=2.7,
-                delivery_time="48h",
-                is_active=True
-            )
-            product3 = Product(
-                category_id=fb_friends.id,
-                name="FB Accounts | The number of subscribers is 50+. Verified by e-mail, there is no email in the set. Male and female. The account profiles may be empty or have limited entries such as photos and other information. 2FA in the set. Token are included in the package. Accounts are registered in Bangladesh IP.",
-                description="Facebook accounts with 50+ subscribers",
-                base_price=0.999,
-                stock_quantity=27,
-                rating=4.6,
-                return_rate=0.7,
-                delivery_time="48h",
-                is_active=True
-            )
-            product4 = Product(
-                category_id=ig_softreg.id,
-                name="IG Accounts | Verified by email, email NOT included. Male or female. The profiles information is partially filled. 2FA included. UserAgent, cookies included. Registered from USA IP.",
-                description="Instagram soft registered accounts from USA",
-                base_price=0.183,
-                stock_quantity=99,
-                rating=4.9,
-                return_rate=1.6,
-                delivery_time="48h",
-                is_active=True
-            )
-            product5 = Product(
-                category_id=ig_aged.id,
-                name="IG Accounts | Aged accounts 2019-2021. Verified by email, email NOT included. Male or female. The profiles information is partially filled. 2FA included. UserAgent, cookies included. Registered from USA IP.",
-                description="Aged Instagram accounts from USA",
-                base_price=0.699,
-                stock_quantity=524,
-                rating=4.9,
-                return_rate=2.0,
-                delivery_time="48h",
-                is_active=True
-            )
-
-            db.session.add_all([product1, product2, product3, product4, product5])
+            with open(os.path.join(data_dir, 'products.json'), 'r') as f:
+                products_data = json.load(f)
+            
+            for prod_data in products_data:
+                category = category_map.get(prod_data['category_slug'])
+                if category:
+                    product = Product(
+                        category_id=category.id,
+                        name=prod_data['name'],
+                        description=prod_data['description'],
+                        base_price=prod_data['base_price'],
+                        stock_quantity=prod_data['stock_quantity'],
+                        rating=prod_data['rating'],
+                        return_rate=prod_data['return_rate'],
+                        delivery_time=prod_data['delivery_time'],
+                        is_active=prod_data['is_active']
+                    )
+                    db.session.add(product)
             db.session.commit()
 
-            # Create vendors and product-vendor relationships
-            vendor1 = Vendor(name="Vendor A", rating=4.5)
-            vendor2 = Vendor(name="Vendor B", rating=4.7)
-            db.session.add_all([vendor1, vendor2])
+            # Create vendors
+            with open(os.path.join(data_dir, 'vendors.json'), 'r') as f:
+                vendors_data = json.load(f)
+            
+            for vend_data in vendors_data:
+                vendor = Vendor(name=vend_data['name'], rating=vend_data['rating'])
+                db.session.add(vendor)
             db.session.commit()
 
-            product_vendor1 = ProductVendor(product_id=product1.id, vendor_id=vendor1.id, price=product1.base_price, stock=product1.stock_quantity, is_active=True)
-            product_vendor2 = ProductVendor(product_id=product2.id, vendor_id=vendor1.id, price=product2.base_price, stock=product2.stock_quantity, is_active=True)
-            product_vendor3 = ProductVendor(product_id=product3.id, vendor_id=vendor2.id, price=product3.base_price, stock=product3.stock_quantity, is_active=True)
-            product_vendor4 = ProductVendor(product_id=product4.id, vendor_id=vendor1.id, price=product4.base_price, stock=product4.stock_quantity, is_active=True)
-            product_vendor5 = ProductVendor(product_id=product5.id, vendor_id=vendor2.id, price=product5.base_price, stock=product5.stock_quantity, is_active=True)
+            # Product-vendor relationships are not directly in JSON, as they depend on product/vendor IDs
+            # For simplicity, we can skip seeding product-vendor relationships from JSON for now,
+            # or add a more complex structure to products.json if needed.
+            # For now, we'll assume products are directly linked to categories.
 
-            db.session.add_all([product_vendor1, product_vendor2, product_vendor3, product_vendor4, product_vendor5])
-            db.session.commit()
-            print("Initial data seeded successfully.")
+            print("Initial data seeded from JSON files successfully.")
         else:
             print("Database already contains data. Skipping seeding.")
 

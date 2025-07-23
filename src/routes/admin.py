@@ -373,10 +373,15 @@ def admin_delete_page(page_id):
 # Header Management APIs
 @admin_bp.route('/header', methods=['GET'])
 def admin_get_header_settings():
-    """Get header settings (logo, navigation menu, search settings)"""
+    """Get header settings (news bar, logo, navigation menu, search settings)"""
     try:
         # Get header-related settings
-        header_keys = ['header_logo_url', 'header_logo_alt', 'navigation_menu', 'search_placeholder', 'search_enabled']
+        header_keys = [
+            'header_newsbar_enabled', 'header_newsbar_text', 'header_newsbar_bg_color', 
+            'header_newsbar_text_color', 'header_newsbar_url',
+            'header_logo_url', 'header_logo_alt', 'header_logo_text', 'header_logo_suffix',
+            'navigation_menu', 'search_placeholder', 'search_enabled', 'search_advanced_enabled'
+        ]
         header_settings = {}
         
         for key in header_keys:
@@ -386,11 +391,19 @@ def admin_get_header_settings():
             else:
                 # Default values
                 defaults = {
+                    'header_newsbar_enabled': 'true',
+                    'header_newsbar_text': 'News, promotions, coupons, announcements are published on our news site - accsmarket.news',
+                    'header_newsbar_bg_color': '#22c55e',
+                    'header_newsbar_text_color': '#ffffff',
+                    'header_newsbar_url': 'accsmarket.news',
                     'header_logo_url': '',
                     'header_logo_alt': 'AccsMarket',
-                    'navigation_menu': '[{"label": "Home", "url": "/", "active": true}, {"label": "News", "url": "/news", "active": true}, {"label": "FAQ", "url": "/faq", "active": true}, {"label": "Terms of use", "url": "/terms", "active": true}]',
+                    'header_logo_text': 'ACCS',
+                    'header_logo_suffix': 'market.com',
+                    'navigation_menu': '[{"id": 1, "label": "Home", "url": "/", "active": true}, {"id": 2, "label": "News", "url": "/news", "active": true}, {"id": 3, "label": "FAQ", "url": "/faq", "active": true}, {"id": 4, "label": "Terms of use", "url": "/terms", "active": true}]',
                     'search_placeholder': 'Search for accounts',
-                    'search_enabled': 'true'
+                    'search_enabled': 'true',
+                    'search_advanced_enabled': 'true'
                 }
                 header_settings[key] = defaults.get(key, '')
         
@@ -407,9 +420,17 @@ def admin_update_header_settings():
     try:
         data = request.get_json()
         
+        # List of allowed header setting keys
+        allowed_keys = [
+            'header_newsbar_enabled', 'header_newsbar_text', 'header_newsbar_bg_color', 
+            'header_newsbar_text_color', 'header_newsbar_url',
+            'header_logo_url', 'header_logo_alt', 'header_logo_text', 'header_logo_suffix',
+            'navigation_menu', 'search_placeholder', 'search_enabled', 'search_advanced_enabled'
+        ]
+        
         # Update or create header settings
         for key, value in data.items():
-            if key in ['header_logo_url', 'header_logo_alt', 'navigation_menu', 'search_placeholder', 'search_enabled']:
+            if key in allowed_keys:
                 setting = SiteSetting.query.filter_by(key=key).first()
                 if setting:
                     setting.value = str(value)
@@ -417,11 +438,19 @@ def admin_update_header_settings():
                 else:
                     # Create new setting
                     descriptions = {
+                        'header_newsbar_enabled': 'Whether news bar is enabled (true/false)',
+                        'header_newsbar_text': 'Text displayed in the news bar',
+                        'header_newsbar_bg_color': 'Background color of the news bar',
+                        'header_newsbar_text_color': 'Text color of the news bar',
+                        'header_newsbar_url': 'URL for the news site',
                         'header_logo_url': 'URL of the header logo image',
                         'header_logo_alt': 'Alt text for the header logo',
+                        'header_logo_text': 'Text part of the logo',
+                        'header_logo_suffix': 'Suffix part of the logo',
                         'navigation_menu': 'JSON array of navigation menu items',
                         'search_placeholder': 'Placeholder text for search input',
-                        'search_enabled': 'Whether search functionality is enabled (true/false)'
+                        'search_enabled': 'Whether search functionality is enabled (true/false)',
+                        'search_advanced_enabled': 'Whether advanced search is enabled (true/false)'
                     }
                     setting = SiteSetting(
                         key=key,
@@ -575,6 +604,283 @@ def admin_update_search_settings():
                 'search_enabled': search_enabled,
                 'search_placeholder': search_placeholder
             }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# Footer Settings Endpoints
+@admin_bp.route('/footer', methods=['GET'])
+def admin_get_footer_settings():
+    """Get footer settings (company info, links, contact info)"""
+    try:
+        # Get footer-related settings
+        footer_keys = [
+            'footer_logo_text', 'footer_logo_suffix', 'footer_company_name', 
+            'footer_company_description', 'footer_social_link_1', 'footer_social_link_2', 
+            'footer_social_link_3', 'footer_quick_links', 'footer_support_links', 
+            'footer_contact_email', 'footer_contact_website', 'footer_contact_support_text',
+            'footer_contact_security_text', 'footer_copyright_text', 'footer_payment_methods'
+        ]
+        footer_settings = {}
+        
+        for key in footer_keys:
+            setting = SiteSetting.query.filter_by(key=key).first()
+            if setting:
+                footer_settings[key] = setting.value
+            else:
+                # Default values
+                defaults = {
+                    'footer_logo_text': 'ACCS',
+                    'footer_logo_suffix': 'market.com',
+                    'footer_company_name': 'ACCS market.com',
+                    'footer_company_description': 'Buy or Sell Social Media Accounts (PVA & Cheap). Your trusted marketplace for social media accounts.',
+                    'footer_social_link_1': '',
+                    'footer_social_link_2': '',
+                    'footer_social_link_3': '',
+                    'footer_quick_links': '[]',
+                    'footer_support_links': '[]',
+                    'footer_contact_email': 'support@accsmarket.com',
+                    'footer_contact_website': 'accsmarket.news',
+                    'footer_contact_support_text': '24/7 Support Available',
+                    'footer_contact_security_text': 'Secure Transactions',
+                    'footer_copyright_text': '© 2024 AccsMarket.com. All rights reserved.',
+                    'footer_payment_methods': '["BTC", "USDT", "ETH", "PayPal"]'
+                }
+                footer_settings[key] = defaults.get(key, '')
+        
+        return jsonify({
+            'success': True,
+            'data': footer_settings
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/footer', methods=['PUT'])
+def admin_update_footer_settings():
+    """Update footer settings"""
+    try:
+        data = request.get_json()
+        
+        # Update or create footer settings
+        valid_keys = [
+            'footer_logo_text', 'footer_logo_suffix', 'footer_company_name', 
+            'footer_company_description', 'footer_social_link_1', 'footer_social_link_2', 
+            'footer_social_link_3', 'footer_quick_links', 'footer_support_links', 
+            'footer_contact_email', 'footer_contact_website', 'footer_contact_support_text',
+            'footer_contact_security_text', 'footer_copyright_text', 'footer_payment_methods'
+        ]
+        
+        for key, value in data.items():
+            if key in valid_keys:
+                setting = SiteSetting.query.filter_by(key=key).first()
+                if setting:
+                    setting.value = str(value)
+                    setting.updated_at = datetime.utcnow()
+                else:
+                    # Create new setting
+                    descriptions = {
+                        'footer_logo_text': 'Footer logo text (e.g., ACCS)',
+                        'footer_logo_suffix': 'Footer logo suffix (e.g., market.com)',
+                        'footer_company_name': 'Company name displayed in footer',
+                        'footer_company_description': 'Company description in footer',
+                        'footer_social_link_1': 'First social media link',
+                        'footer_social_link_2': 'Second social media link',
+                        'footer_social_link_3': 'Third social media link',
+                        'footer_quick_links': 'Quick links in footer (JSON array)',
+                        'footer_support_links': 'Support links in footer (JSON array)',
+                        'footer_contact_email': 'Contact email address',
+                        'footer_contact_website': 'Contact website URL',
+                        'footer_contact_support_text': 'Support availability text',
+                        'footer_contact_security_text': 'Security information text',
+                        'footer_copyright_text': 'Copyright text',
+                        'footer_payment_methods': 'Payment methods (JSON array)'
+                    }
+                    setting = SiteSetting(
+                        key=key,
+                        value=str(value),
+                        description=descriptions.get(key, f'Footer setting: {key}')
+                    )
+                    db.session.add(setting)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Footer settings updated successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/footer/company', methods=['PUT'])
+def admin_update_footer_company():
+    """Update footer company information"""
+    try:
+        data = request.get_json()
+        
+        company_fields = {
+            'footer_logo_text': data.get('logo_text', ''),
+            'footer_logo_suffix': data.get('logo_suffix', ''),
+            'footer_company_name': data.get('company_name', ''),
+            'footer_company_description': data.get('company_description', ''),
+            'footer_social_link_1': data.get('social_link_1', ''),
+            'footer_social_link_2': data.get('social_link_2', ''),
+            'footer_social_link_3': data.get('social_link_3', '')
+        }
+        
+        for key, value in company_fields.items():
+            setting = SiteSetting.query.filter_by(key=key).first()
+            if setting:
+                setting.value = str(value)
+                setting.updated_at = datetime.utcnow()
+            else:
+                descriptions = {
+                    'footer_logo_text': 'Footer logo text',
+                    'footer_logo_suffix': 'Footer logo suffix',
+                    'footer_company_name': 'Company name',
+                    'footer_company_description': 'Company description',
+                    'footer_social_link_1': 'First social media link',
+                    'footer_social_link_2': 'Second social media link',
+                    'footer_social_link_3': 'Third social media link'
+                }
+                setting = SiteSetting(
+                    key=key,
+                    value=str(value),
+                    description=descriptions[key]
+                )
+                db.session.add(setting)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Footer company information updated successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/footer/links', methods=['PUT'])
+def admin_update_footer_links():
+    """Update footer links (quick links and support links)"""
+    try:
+        data = request.get_json()
+        
+        # Handle quick links
+        if 'quick_links' in data:
+            quick_links_setting = SiteSetting.query.filter_by(key='footer_quick_links').first()
+            if quick_links_setting:
+                quick_links_setting.value = str(data['quick_links'])
+                quick_links_setting.updated_at = datetime.utcnow()
+            else:
+                quick_links_setting = SiteSetting(
+                    key='footer_quick_links',
+                    value=str(data['quick_links']),
+                    description='Quick links in footer (JSON array)'
+                )
+                db.session.add(quick_links_setting)
+        
+        # Handle support links
+        if 'support_links' in data:
+            support_links_setting = SiteSetting.query.filter_by(key='footer_support_links').first()
+            if support_links_setting:
+                support_links_setting.value = str(data['support_links'])
+                support_links_setting.updated_at = datetime.utcnow()
+            else:
+                support_links_setting = SiteSetting(
+                    key='footer_support_links',
+                    value=str(data['support_links']),
+                    description='Support links in footer (JSON array)'
+                )
+                db.session.add(support_links_setting)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Footer links updated successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/footer/contact', methods=['PUT'])
+def admin_update_footer_contact():
+    """Update footer contact information"""
+    try:
+        data = request.get_json()
+        
+        contact_fields = {
+            'footer_contact_email': data.get('contact_email', ''),
+            'footer_contact_website': data.get('contact_website', ''),
+            'footer_contact_support_text': data.get('support_text', ''),
+            'footer_contact_security_text': data.get('security_text', '')
+        }
+        
+        for key, value in contact_fields.items():
+            setting = SiteSetting.query.filter_by(key=key).first()
+            if setting:
+                setting.value = str(value)
+                setting.updated_at = datetime.utcnow()
+            else:
+                descriptions = {
+                    'footer_contact_email': 'Contact email address',
+                    'footer_contact_website': 'Contact website URL',
+                    'footer_contact_support_text': 'Support availability text',
+                    'footer_contact_security_text': 'Security information text'
+                }
+                setting = SiteSetting(
+                    key=key,
+                    value=str(value),
+                    description=descriptions[key]
+                )
+                db.session.add(setting)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Footer contact information updated successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/footer/bottom', methods=['PUT'])
+def admin_update_footer_bottom():
+    """Update footer bottom section (copyright and payment methods)"""
+    try:
+        data = request.get_json()
+        
+        bottom_fields = {
+            'footer_copyright_text': data.get('copyright_text', ''),
+            'footer_payment_methods': data.get('payment_methods', '[]')
+        }
+        
+        for key, value in bottom_fields.items():
+            setting = SiteSetting.query.filter_by(key=key).first()
+            if setting:
+                setting.value = str(value)
+                setting.updated_at = datetime.utcnow()
+            else:
+                descriptions = {
+                    'footer_copyright_text': 'Copyright text',
+                    'footer_payment_methods': 'Payment methods (JSON array)'
+                }
+                setting = SiteSetting(
+                    key=key,
+                    value=str(value),
+                    description=descriptions[key]
+                )
+                db.session.add(setting)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Footer bottom section updated successfully'
         })
     except Exception as e:
         db.session.rollback()
