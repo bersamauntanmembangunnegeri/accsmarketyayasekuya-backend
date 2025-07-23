@@ -51,6 +51,15 @@ def serve_admin(path):
         else:
             return "Admin interface not found", 404
 
+@app.route('/admin-panel')
+def serve_admin_panel():
+    # Serve the main React app for admin panel
+    index_path = os.path.join(app.static_folder, 'index.html')
+    if os.path.exists(index_path):
+        return send_from_directory(app.static_folder, 'index.html')
+    else:
+        return "Admin panel not found", 404
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
