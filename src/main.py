@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
+from flask_migrate import Migrate
 from src.models.user import db
 from src.models.category import Category
 from src.models.product import Product
@@ -34,11 +35,17 @@ app.register_blueprint(orders_bp, url_prefix='/api')
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(pages_bp, url_prefix="/api")
 
-# Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+# Database configuration - hybrid approach for deployment compatibility
+database_url = os.environ.get("DATABASE_URL")
+if database_url and database_url.startswith("postgresql://"):
+    # Use PostgreSQL if available and properly configured
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+else:
+    # Fallback to SQLite for deployment compatibility
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
-
+migrate = Migrate(app, db)
 # Function to seed initial data
 def seed_data():
     with app.app_context():
@@ -161,7 +168,13 @@ def serve(path):
 
 if __name__ == '__main__':
     with app.app_context():
-        db.drop_all()
-        db.create_all()
-        seed_data()
+        # Create tables and seed data if using SQLite or if explicitly requested
+        database_url = os.environ.get("DATABASE_URL")
+        if not database_url or not database_url.startswith("postgresql://"):
+            # SQLite mode - create tables and seed data
+            db.create_all()
+            seed_data()
+        else:
+            # PostgreSQL mode - data should already be migrated and seeded
+            print("Using PostgreSQL - assuming migrations and seed data are already applied")
     app.run(host='0.0.0.0', port=5000, debug=True)
