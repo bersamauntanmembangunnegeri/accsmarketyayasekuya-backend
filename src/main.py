@@ -172,7 +172,7 @@ if __name__ == '__main__':
            Category.query.count() == 0:
             print("Creating tables and seeding data for SQLite...")
             db.create_all()
-            seed_data()
+        # seed_data()
         else:
             print("Database already exists and contains data. Skipping seeding.")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
