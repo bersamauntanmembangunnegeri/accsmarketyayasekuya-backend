@@ -1,0 +1,58 @@
+[
+  {
+    "category_slug": "facebook-softregs",
+    "name": "FB Accounts | Verified by e-mail, there is no email in the set. Male or female. The account profiles may be empty or have limited entries such as photos and other information. 2FA included. Cookies are included. Accounts are registered in United Kingdom IP.",
+    "description": "High quality Facebook accounts verified by email",
+    "base_price": 0.278,
+    "stock_quantity": 345,
+    "rating": 4.6,
+    "return_rate": 2.1,
+    "delivery_time": "48h",
+    "is_active": true
+  },
+  {
+    "category_slug": "facebook-softregs",
+    "name": "FB Accounts | Verified by email (email not included). Male or female. The account profiles may be empty or have limited entries such as photos and other information. 2FA included. Registered from USA IP.",
+    "description": "Facebook soft registered accounts from USA",
+    "base_price": 0.296,
+    "stock_quantity": 1648,
+    "rating": 4.8,
+    "return_rate": 2.7,
+    "delivery_time": "48h",
+    "is_active": true
+  },
+  {
+    "category_slug": "facebook-with-friends",
+    "name": "FB Accounts | The number of subscribers is 50+. Verified by e-mail, there is no email in the set. Male and female. The account profiles may be empty or have limited entries such as photos and other information. 2FA in the set. Token are included in the package. Accounts are registered in Bangladesh IP.",
+    "description": "Facebook accounts with 50+ subscribers",
+    "base_price": 0.999,
+    "stock_quantity": 27,
+    "rating": 4.6,
+    "return_rate": 0.7,
+    "delivery_time": "48h",
+    "is_active": true
+  },
+  {
+    "category_slug": "instagram-softreg",
+    "name": "IG Accounts | Verified by email, email NOT included. Male or female. The profiles information is partially filled. 2FA included. UserAgent, cookies included. Registered from USA IP.",
+    "description": "Instagram soft registered accounts from USA",
+    "base_price": 0.183,
+    "stock_quantity": 99,
+    "rating": 4.9,
+    "return_rate": 1.6,
+    "delivery_time": "48h",
+    "is_active": true
+  },
+  {
+    "category_slug": "instagram-aged",
+    "name": "IG Accounts | Aged accounts 2019-2021. Verified by email, email NOT included. Male or female. The profiles information is partially filled. 2FA included. UserAgent, cookies included. Registered from USA IP.",
+    "description": "Aged Instagram accounts from USA",
+    "base_price": 0.699,
+    "stock_quantity": 524,
+    "rating": 4.9,
+    "return_rate": 2.0,
+    "delivery_time": "48h",
+    "is_active": true
+  }
+]
+

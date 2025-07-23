@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Facebook Softregs",
+    "slug": "facebook-softregs",
+    "description": "Facebook accounts registered with software",
+    "parent_slug": "facebook-accounts"
+  },
+  {
+    "name": "Facebook With friends",
+    "slug": "facebook-with-friends",
+    "description": "Facebook accounts with existing friends",
+    "parent_slug": "facebook-accounts"
+  },
+  {
+    "name": "Instagram Softreg",
+    "slug": "instagram-softreg",
+    "description": "Instagram accounts registered with software",
+    "parent_slug": "instagram-accounts"
+  },
+  {
+    "name": "Instagram Aged",
+    "slug": "instagram-aged",
+    "description": "Aged Instagram accounts",
+    "parent_slug": "instagram-accounts"
+  }
+]
+
