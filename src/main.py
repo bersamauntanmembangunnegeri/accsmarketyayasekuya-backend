@@ -36,8 +36,11 @@ app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(pages_bp, url_prefix="/api")
 
 # Database configuration - use SQLite for deployment compatibility
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-print("Using SQLite database for deployment compatibility")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL") or f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+if os.environ.get("DATABASE_URL"):
+    print("Using PostgreSQL database from DATABASE_URL environment variable")
+else:
+    print("Using SQLite database for deployment compatibility")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
