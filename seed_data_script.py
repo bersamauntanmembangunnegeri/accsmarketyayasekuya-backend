@@ -18,6 +18,8 @@ from src.models.vendor import Vendor
 def seed_data():
     """Seed the database with initial data from JSON files"""
     with app.app_context():
+        db.drop_all()
+        db.create_all()
         # Check if categories already exist
         if Category.query.count() == 0:
             print("Seeding initial data from JSON files...")
@@ -41,7 +43,12 @@ def seed_data():
                 subcategories_data = json.load(f)
             
             for sub_cat_data in subcategories_data:
-                parent_category = category_map.get(sub_cat_data['parent_slug'])
+                parent_category = None
+                if 'parent_slug' in sub_cat_data:
+                    parent_category = category_map.get(sub_cat_data['parent_slug'])
+                elif 'parent_id' in sub_cat_data:
+                    # Find parent by ID
+                    parent_category = db.session.query(Category).filter_by(id=sub_cat_data['parent_id']).first()
                 if parent_category:
                     subcategory = Category(
                         name=sub_cat_data['name'],
@@ -58,7 +65,12 @@ def seed_data():
                 products_data = json.load(f)
             
             for prod_data in products_data:
-                category = category_map.get(prod_data['category_slug'])
+                category = None
+                if 'category_slug' in prod_data:
+                    category = category_map.get(prod_data['category_slug'])
+                elif 'category_id' in prod_data:
+                    # Find category by ID
+                    category = db.session.query(Category).filter_by(id=prod_data['category_id']).first()
                 if category:
                     product = Product(
                         category_id=category.id,

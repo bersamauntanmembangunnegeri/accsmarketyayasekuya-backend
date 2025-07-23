@@ -24,8 +24,8 @@ from src.routes.pages import pages_bp
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
 
-# Enable CORS for all routes
-CORS(app)
+# Enable CORS for all routes and origins
+CORS(app, origins="*", allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 # Register blueprints
 app.register_blueprint(user_bp, url_prefix='/api')
@@ -35,14 +35,9 @@ app.register_blueprint(orders_bp, url_prefix='/api')
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(pages_bp, url_prefix="/api")
 
-# Database configuration - hybrid approach for deployment compatibility
-database_url = os.environ.get("DATABASE_URL")
-if database_url and database_url.startswith("postgresql://"):
-    # Use PostgreSQL if available and properly configured
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-else:
-    # Fallback to SQLite for deployment compatibility
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+# Database configuration - use SQLite for deployment compatibility
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+print("Using SQLite database for deployment compatibility")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -168,13 +163,13 @@ def serve(path):
 
 if __name__ == '__main__':
     with app.app_context():
-        # Create tables and seed data if using SQLite or if explicitly requested
-        database_url = os.environ.get("DATABASE_URL")
-        if not database_url or not database_url.startswith("postgresql://"):
-            # SQLite mode - create tables and seed data
+        # Ensure database is created and seeded on first run in deployment
+        # This block will only execute if the database is empty
+        if not os.path.exists(os.path.join(os.path.dirname(__file__), 'database', 'app.db')) or \
+           Category.query.count() == 0:
+            print("Creating tables and seeding data for SQLite...")
             db.create_all()
             seed_data()
         else:
-            # PostgreSQL mode - data should already be migrated and seeded
-            print("Using PostgreSQL - assuming migrations and seed data are already applied")
+            print("Database already exists and contains data. Skipping seeding.")
     app.run(host='0.0.0.0', port=5000, debug=True)
