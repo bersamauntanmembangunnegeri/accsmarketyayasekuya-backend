@@ -214,3 +214,156 @@ def admin_dashboard():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+# Site Settings CRUD
+@admin_bp.route('/settings', methods=['GET'])
+def admin_get_settings():
+    """Get all site settings"""
+    try:
+        settings = SiteSetting.query.all()
+        return jsonify({
+            'success': True,
+            'data': [setting.to_dict() for setting in settings]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/settings', methods=['POST'])
+def admin_create_setting():
+    """Create new site setting"""
+    try:
+        data = request.get_json()
+        
+        setting = SiteSetting(
+            key=data['key'],
+            value=data['value'],
+            description=data.get('description')
+        )
+        
+        db.session.add(setting)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Setting created successfully',
+            'data': setting.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/settings/<int:setting_id>', methods=['PUT'])
+def admin_update_setting(setting_id):
+    """Update site setting"""
+    try:
+        setting = SiteSetting.query.get_or_404(setting_id)
+        data = request.get_json()
+        
+        setting.key = data.get('key', setting.key)
+        setting.value = data.get('value', setting.value)
+        setting.description = data.get('description', setting.description)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Setting updated successfully',
+            'data': setting.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/settings/<int:setting_id>', methods=['DELETE'])
+def admin_delete_setting(setting_id):
+    """Delete site setting"""
+    try:
+        setting = SiteSetting.query.get_or_404(setting_id)
+        db.session.delete(setting)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Setting deleted successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Pages CRUD
+@admin_bp.route('/pages', methods=['GET'])
+def admin_get_pages():
+    """Get all pages"""
+    try:
+        pages = Page.query.all()
+        return jsonify({
+            'success': True,
+            'data': [page.to_dict() for page in pages]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/pages', methods=['POST'])
+def admin_create_page():
+    """Create new page"""
+    try:
+        data = request.get_json()
+        
+        page = Page(
+            title=data['title'],
+            slug=data['slug'],
+            content=data.get('content'),
+            is_active=data.get('is_active', True)
+        )
+        
+        db.session.add(page)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Page created successfully',
+            'data': page.to_dict()
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/pages/<int:page_id>', methods=['PUT'])
+def admin_update_page(page_id):
+    """Update page"""
+    try:
+        page = Page.query.get_or_404(page_id)
+        data = request.get_json()
+        
+        page.title = data.get('title', page.title)
+        page.slug = data.get('slug', page.slug)
+        page.content = data.get('content', page.content)
+        page.is_active = data.get('is_active', page.is_active)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Page updated successfully',
+            'data': page.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@admin_bp.route('/pages/<int:page_id>', methods=['DELETE'])
+def admin_delete_page(page_id):
+    """Delete page"""
+    try:
+        page = Page.query.get_or_404(page_id)
+        db.session.delete(page)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Page deleted successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
