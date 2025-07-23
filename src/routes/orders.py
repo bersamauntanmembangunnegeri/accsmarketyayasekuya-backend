@@ -79,7 +79,7 @@ def create_order():
         
         # Create order
         order = Order(
-            email=data['email'],
+            customer_email=data['email'],
             product_id=data['product_id'],
             vendor_id=data['vendor_id'],
             quantity=data['quantity'],
@@ -87,6 +87,7 @@ def create_order():
             total_price=total_price,
             payment_method=data['payment_method'],
             coupon_code=coupon_code,
+            subscribe_newsletter=data.get('subscribe_newsletter', False),
             status='pending'
         )
         
@@ -120,6 +121,93 @@ def get_order(order_id):
             'success': True,
             'data': order.to_dict()
         })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+
+@orders_bp.route('/orders/<int:order_id>/status', methods=['PUT'])
+def update_order_status(order_id):
+    """Update order status"""
+    try:
+        data = request.get_json()
+        
+        if 'status' not in data:
+            return jsonify({
+                'success': False,
+                'message': 'Status is required'
+            }), 400
+        
+        # Validate status
+        valid_statuses = ['pending', 'processing', 'completed', 'cancelled', 'failed']
+        if data['status'] not in valid_statuses:
+            return jsonify({
+                'success': False,
+                'message': f'Invalid status. Must be one of: {", ".join(valid_statuses)}'
+            }), 400
+        
+        order = Order.query.get_or_404(order_id)
+        order.status = data['status']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Order status updated successfully',
+            'data': order.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@orders_bp.route('/orders', methods=['GET'])
+def get_orders():
+    """Get all orders with optional filtering"""
+    try:
+        # Get query parameters
+        status = request.args.get('status')
+        email = request.args.get('email')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+        
+        # Build query
+        query = Order.query
+        
+        if status:
+            query = query.filter(Order.status == status)
+        
+        if email:
+            query = query.filter(Order.customer_email.ilike(f'%{email}%'))
+        
+        # Order by creation date (newest first)
+        query = query.order_by(Order.created_at.desc())
+        
+        # Paginate
+        orders = query.paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': [order.to_dict() for order in orders.items],
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': orders.total,
+                'pages': orders.pages,
+                'has_next': orders.has_next,
+                'has_prev': orders.has_prev
+            }
+        })
+        
     except Exception as e:
         return jsonify({
             'success': False,
