@@ -38,6 +38,19 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+@app.route('/admin', defaults={'path': ''})
+@app.route('/admin/<path:path>')
+def serve_admin(path):
+    admin_folder_path = os.path.join(app.static_folder, 'admin')
+    if path != "" and os.path.exists(os.path.join(admin_folder_path, path)):
+        return send_from_directory(admin_folder_path, path)
+    else:
+        admin_index_path = os.path.join(admin_folder_path, 'index.html')
+        if os.path.exists(admin_index_path):
+            return send_from_directory(admin_folder_path, 'index.html')
+        else:
+            return "Admin interface not found", 404
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
@@ -57,17 +70,4 @@ def serve(path):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-@app.route('/admin', defaults={'path': ''})
-@app.route('/admin/<path:path>')
-def serve_admin(path):
-    admin_folder_path = os.path.join(app.static_folder, 'admin')
-    if path != "" and os.path.exists(os.path.join(admin_folder_path, path)):
-        return send_from_directory(admin_folder_path, path)
-    else:
-        admin_index_path = os.path.join(admin_folder_path, 'index.html')
-        if os.path.exists(admin_index_path):
-            return send_from_directory(admin_folder_path, 'index.html')
-        else:
-            return "Admin interface not found", 404
 
