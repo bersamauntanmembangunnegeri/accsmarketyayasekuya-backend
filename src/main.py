@@ -35,13 +35,12 @@ app.register_blueprint(orders_bp, url_prefix='/api')
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(pages_bp, url_prefix="/api")
 
-# Database configuration - use SQLite for deployment compatibility
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL") or f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-if os.environ.get("DATABASE_URL"):
-    print("Using PostgreSQL database from DATABASE_URL environment variable")
-else:
-    print("Using SQLite database for deployment compatibility")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Database configuration - PostgreSQL only
+database_url = os.environ.get("DATABASE_URL")
+if not database_url:
+    raise RuntimeError("DATABASE_URL environment variable is required for PostgreSQL connection")
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 # Function to seed initial data
@@ -121,6 +120,8 @@ def seed_data():
         else:
             print("Database already contains data. Skipping seeding.")
 
+
+
 @app.route("/admin", defaults={
     "path": ""
 })
@@ -166,13 +167,5 @@ def serve(path):
 
 if __name__ == '__main__':
     with app.app_context():
-        # Ensure database is created and seeded on first run in deployment
-        # This block will only execute if the database is empty
-        if not os.path.exists(os.path.join(os.path.dirname(__file__), 'database', 'app.db')) or \
-           Category.query.count() == 0:
-            print("Creating tables and seeding data for SQLite...")
-            db.create_all()
-        # seed_data()
-        else:
-            print("Database already exists and contains data. Skipping seeding.")
+        db.create_all()
     app.run(host='0.0.0.0', port=5001, debug=True)
